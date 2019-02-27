@@ -1,0 +1,217 @@
+swagger: "2.0"
+info:
+  version: "0.0.2"
+  title: Swagger API
+host: falcon-dev.ikap.biba.uni-bremen.de:8117
+basePath: /
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  '/simpleTracking':
+
+    parameters:
+      - name: epc
+        in: query
+        required: true
+        description: Electronic Product Code, for example, urn:epc:id:sgtin:0614141.lindback.testproduct
+        type: string
+    get:
+      tags:
+        - "Event Data"
+      summary: Track by Product ID
+      description: Return a list of object events related to the product, sorted by eventTime in descending order
+      produces:
+      - "application/json"
+      responses:
+        '200':
+          description: On success, return an array of EPCIS object events. Return a empty list '[]'',in case product with given EPC code is not found.
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/EPCISObjectEvent"
+          examples:
+            application/json:
+              - 
+                eventTimeZoneOffset: "-06:00"
+                bizStep: "urn:epcglobal:cbv:bizstep:entering_exiting"
+                recordTime: 
+                 "$date": 1524156074162
+                readPoint: 
+                 id: "urn:epc:id:sgln:readPoint.lindbacks.3"
+                eventTime: 
+                 "$date": 1523414011116
+                action: OBSERVE
+                bizLocation: 
+                 id: "urn:epc:id:sgln:bizLocation.lindbacks.4"
+                _id: 
+                 "$oid": 5ad8c6aabe0777000174179d
+                eventType: ObjectEvent
+                epcList: 
+                 - 
+                   epc: "urn:epc:id:sgtin:0614141.lindback.testproduct"
+  '/masterData':
+    parameters:
+      - name: type
+        in: query
+        required: false
+        description: 'EPCIS Master Data Vocabulary Type, for example, urn:epcglobal:epcis:vtype:BusinessLocation'
+        type: string
+      - name: id
+        in: query
+        required: true
+        description: 'EPCIS Master Data Vocabulary Element ID, for example, urn:epc:id:sgln:bizLocation.lindbacks.1'
+        type: string
+    get:
+      tags:
+        - "Master Data"
+      summary: Find EPCIS Master Data vocabulary element by Type and ID
+      description: Return a list of master data vocabulary element, when the given vocabulary element type and ID is unique, the list contains only one master data vocabulary element 
+      produces:
+      - "application/json"
+      responses:
+        '200':
+          description: On success, return an list of master data vocabulary element. Return a empty list '[]'', in case Master Data Vocabulary Element is not found.
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/EPCISMasterDataElement"
+          examples:
+            application/json:
+              - 
+                attributes: 
+                 lastUpdated: 
+                  "$date": 1524149626956
+                 "urn:epcglobal:cbv:mda#description": 
+                  - 
+                   Backroom
+                id: 201
+                type: "urn:epcglobal:epcis:vtype:SubSiteType"
+  '/productionProcessTemplate/{productClass}':
+    parameters:
+      - name: productClass
+        in: path
+        required: true
+        description: Product Class ID, which is unique in NIMBLE platform, for example, lindbaekeHause
+        type: string
+    get:
+      tags:
+        - "Production Process Template"
+      summary: Get production process template for the given product class
+      description: Return production process template, which consists of a list of production process steps
+      produces:
+      - "application/json"
+      responses:
+        '200':
+          description: On success, return a list of production process steps. Return a empty list '[]'',in case Production Process Template is not found
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ProductionProcessStep"
+          examples:
+            application/json:
+              - 
+               id: 1
+               hasPrev: ""
+               readPoint: "urn:epc:id:sgln:readPoint.lindbacks.1"
+               bizLocation: "urn:epc:id:sgln:bizLocation.lindbacks.2"
+               bizStep: "urn:epcglobal:cbv:bizstep:other"
+               hasNext: 2
+              - 
+               id: 2
+               hasPrev: 1
+               readPoint: "urn:epc:id:sgln:readPoint.lindbacks.2"
+               bizLocation: "urn:epc:id:sgln:bizLocation.lindbacks.3"
+               bizStep: "urn:epcglobal:cbv:bizstep:installing"
+               hasNext: 3
+              - 
+               id: 3
+               hasPrev: 2
+               readPoint: "urn:epc:id:sgln:readPoint.lindbacks.3"
+               bizLocation: "urn:epc:id:sgln:bizLocation.lindbacks.4"
+               bizStep: "urn:epcglobal:cbv:bizstep:entering_exiting"
+               hasNext: 4
+              - 
+               id: 4
+               hasPrev: 3
+               readPoint: "urn:epc:id:sgln:readPoint.lindbacks.4"
+               bizLocation: "urn:epc:id:sgln:bizLocation.lindbacks.5"
+               bizStep: "urn:epcglobal:cbv:bizstep:shipping"
+               hasNext: ""                
+
+definitions:
+  EPCISObjectEvent:
+    type: object
+    properties:
+      eventTimeZoneOffset:
+        type: string
+      bizStep:
+        type: string
+      recordTime:
+        type: object
+        properties:
+          $date:
+            type: integer
+      readPoint:
+        type: object
+        properties:
+          id:
+            type: string
+      eventTime:
+        type: object
+        properties:
+          $date:
+            type: integer
+      action:
+        type: string
+      bizLocation:
+        type: object
+        properties:
+          id:
+            type: string
+      eventType:
+        type: string
+      epcList:
+        type: array
+        items:
+          type: object
+          properties:
+            epc:
+              type: string
+    additionalProperties:
+      type: object            
+  EPCISMasterDataElement:
+    type: object
+    properties:
+      attributes:
+        type: object
+        additionalProperties:
+          type: object
+          
+      id:
+        type: string
+      type:
+        type: string
+  ProductionProcessStep:
+    type: object
+    properties:
+      id:
+        type: string
+      hasPrev:
+        type: string
+      readPoint:
+        type: string
+      bizLocation:
+        type: string
+      bizStep:
+        type: string
+      hasNext:
+        type: string
+
+     
+
+        
