@@ -17,10 +17,11 @@ spring:
       # it can be set via an environment variable or the config server
       enabled: ${discovery.enabled:${DISCOVERY_ENABLED:false}}
   epcis:
-    url: http://${EPCIS_HOST:localhost}:${EPCIS_PORT:8119}
+    url: http://${EPCIS_HOST:localhost}:${EPCIS_PORT:8080}/${EPCIS_API_PREFIX_PATH:Service}/
     # relative path befor the standard EPCIS Service Interface e.g. Poll
-    # For example, in default, the following url will be called for a simple event query: http://localhost:8119/epcis/Service/Poll/SimpleEventQuery?MATCH_epc=xx 
-    rest_api_path: ${EPCIS_API_PATH:epcis/Service}
+    # For example, in default, the following url will be called for a simple event query: http://localhost:8119/Service/Poll/SimpleEventQuery?MATCH_epc=xx 
+    #rest_api_path: ${EPCIS_API_PATH:epcis/Service}
+    #rest_api_prefix_path: ${EPCIS_API_PREFIX_PATH:Service}
 logstash:
   uri: ${LOGSTASH_URI:localhost:5000}
   
