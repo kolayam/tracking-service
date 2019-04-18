@@ -17,15 +17,15 @@ spring:
       # it can be set via an environment variable or the config server
       enabled: ${discovery.enabled:${DISCOVERY_ENABLED:false}}
   epcis:
-    url: http://${EPCIS_HOST:localhost}:${EPCIS_PORT:8080}/${EPCIS_API_PREFIX_PATH:Service}/
-    # relative path befor the standard EPCIS Service Interface e.g. Poll
-    # For example, in default, the following url will be called for a simple event query: http://localhost:8119/Service/Poll/SimpleEventQuery?MATCH_epc=xx 
-    #rest_api_path: ${EPCIS_API_PATH:epcis/Service}
-    #rest_api_prefix_path: ${EPCIS_API_PREFIX_PATH:Service}
+    url: ${EPCIS_SERVICE_URL:http://localhost:8099}
+  blockchain-service:
+    url: http://${BLOCKCHAIN_HOST:161.156.70.125}:${BLOCKCHAIN_PORT:5000}/${API_PATH:hash}
+    
 logstash:
   uri: ${LOGSTASH_URI:localhost:5000}
   
-
+nimble:
+  platformHost: ${NIMBLE_PLATFORM_HOST:http://localhost:8090}
 ---
 
 spring:

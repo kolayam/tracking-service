@@ -1,38 +1,53 @@
 package eu.nimble.service.tracking.docs;
 
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import io.swagger.annotations.Api;
 
-import io.swagger.models.Contact;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import io.swagger.annotations.ApiOperation;
 
 @Configuration
 @EnableSwagger2
-public class SwaggerConfig {                                    
-	@Bean
-	public Docket simpleDiffServiceApi() {
-	  return new Docket(DocumentationType.SWAGGER_2)
-	  .groupName("calculator")
-	  .apiInfo(apiInfo())
-	  .select()
-	  .apis(RequestHandlerSelectors.any())
-	  .paths(PathSelectors.any())
-	  .build()
-	  .pathMapping("/");
-	 
-	}
-	
-	private ApiInfo apiInfo() {
-		  return new ApiInfoBuilder()
-		  .title("A simple calculator service")
-		  .description("A simple calculator REST service made with Spring Boot in Java")
-		  .version("1.0")
-		  .build();
-		}
+public class SwaggerConfig {
+
+    @Value("${nimble.platformHost}")
+    private String platformHost;
+
+    @Bean
+    public Docket api() {
+
+        platformHost = platformHost.replace("https://", "");
+        platformHost = platformHost.replace("http://","");
+
+        return new Docket(DocumentationType.SWAGGER_2)
+                .host(platformHost)
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("eu.nimble.service.tracking.impl.controller"))
+                .apis(RequestHandlerSelectors.any())
+                .paths(PathSelectors.any())
+                .build()
+                .apiInfo(metaData());
+        
+    }
+    
+ 
+    private ApiInfo metaData(){
+        return new ApiInfoBuilder().title("NIMBLE Server Tracking & Tracing REST API")
+                .description("REST API handling Tracking & Tracing services on the NIMBLE platform")
+                .license("Apache 2.0")
+                .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html")
+                .version("1.0.0")
+                .build();
+    }
+    
 }

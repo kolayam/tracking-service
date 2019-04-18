@@ -28,7 +28,7 @@ In Eclipse: "Preferences -> Maven -> Error/Warnings" und Fehler in Warnung umwan
 
 ### Run with Docker ###
 
-> Run 'docker run -d -e EPCIS_HOST=localhost -e EPCIS_PORT=8119 -e EPCIS_API_PREFIX_PATH="epcis/Service" nimbleplatform/tracking-service:0.0.10' for running the docker image. Please update environment variable correspondingly to connect with EPCIS REST API services.  
+> Run 'docker run -d -e EPCIS_SERVICE_URL="http://localhost:8080" nimbleplatform/tracking-service:0.0.10' for running the docker image. Please update environment variable correspondingly to connect with EPCIS REST API services.  
 
 ### Quick Test ###
 > When it works properly, http://localhost:8090/greeting will return a greeting message.
