@@ -25,7 +25,7 @@ logstash:
   uri: ${LOGSTASH_URI:localhost:5000}
   
 nimble:
-  platformHost: ${NIMBLE_PLATFORM_HOST:http://localhost:8090}
+  platformHost: ${TRACKING_SERVICE_URL:http://localhost:8090}
 ---
 
 spring:
