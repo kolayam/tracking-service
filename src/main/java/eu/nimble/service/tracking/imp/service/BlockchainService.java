@@ -171,8 +171,10 @@ public class BlockchainService {
 		String url = blockchainURL;		
 
 		HttpHeaders headers = new HttpHeaders();
-		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url).queryParam("hash", eventHash)
-				.queryParam("type", "rfid");
+//		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url).queryParam("hash", eventHash)
+//				.queryParam("type", "rfid");
+		String hashParmForAPI = "rfid," + eventHash;
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url).queryParam("hash", hashParmForAPI);
 		HttpEntity<?> entity = new HttpEntity<>(headers);
 		
 		try {
@@ -183,7 +185,7 @@ public class BlockchainService {
 			 boolean successFlag = jsonResponse.getBoolean("success");
 		     String successMsg = jsonResponse.getString("message");
 		     
-		     if(successFlag && successMsg.endsWith("found successfully"))
+		     if(successFlag && successMsg.contains("\"result\":\"true\""))
 		     {
 		    	 found = true;
 		     }
