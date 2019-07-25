@@ -314,7 +314,14 @@ public class TrackingController {
 				String.class);
 		String result = response.getBody();
 
-		System.out.println(result);
+		JSONArray list = new JSONArray(response.getBody());
+		for (int i = 0; i < list.length(); i++) {
+			JSONObject exploreObject = list.getJSONObject(i);
+			System.out.println(exploreObject);
+
+		}
+
+//		System.out.println(list);
 
 		return new ResponseEntity<>("ok", HttpStatus.OK);
 	}
