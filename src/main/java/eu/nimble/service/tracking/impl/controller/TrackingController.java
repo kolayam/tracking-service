@@ -302,7 +302,7 @@ public class TrackingController {
 		{
 			url = url + "/";
 		}
-		url = url + "Service/Poll/SimpleEventQuery?MATCH_epc=" + item
+		url = url + "Poll/SimpleEventQuery?MATCH_epc=" + item
 				+ "&orderBy=eventTime&orderDirection=DESC&format=JSON";
 
 		System.out.println(url);
