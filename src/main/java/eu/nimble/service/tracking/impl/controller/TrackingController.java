@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,6 +277,46 @@ public class TrackingController {
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.add("Content-Type", "application/json; charset=utf-8");
 		return new ResponseEntity<>(result, responseHeaders, HttpStatus.OK);
+	}
+
+
+	@PostMapping("/getEPCTimeDelay")
+	public ResponseEntity<?> getEPCTimeDelay(@RequestParam("item") String item,
+			  @RequestBody String inputDocument,
+			  @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
+
+//		System.out.println(item);
+//		System.out.println(inputDocument);
+
+		JSONObject jsonObject = new JSONObject(inputDocument);
+		JSONArray jsonArray = jsonObject.getJSONArray("productionProcessTemplate");
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject exploreObject = jsonArray.getJSONObject(i);
+			System.out.println(exploreObject.getString("readPoint"));
+
+
+		}
+
+		String url = epcisURL.trim();
+		if(!url.endsWith("/"))
+		{
+			url = url + "/";
+		}
+		url = url + "Service/Poll/SimpleEventQuery?MATCH_epc=" + item
+				+ "&orderBy=eventTime&orderDirection=DESC&format=JSON";
+
+		System.out.println(url);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", bearerToken);
+
+		HttpEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<Object>(headers),
+				String.class);
+		String result = response.getBody();
+
+		System.out.println(result);
+
+		return new ResponseEntity<>("ok", HttpStatus.OK);
 	}
 	
 
