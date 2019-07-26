@@ -1,6 +1,7 @@
 package eu.nimble.service.tracking.impl.controller;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -35,6 +36,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import javax.json.JsonObject;
 
 /**
  * This controller should be implemented internally by company, who want to
@@ -285,42 +288,51 @@ public class TrackingController {
 			  @RequestBody String inputDocument,
 			  @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
-//		System.out.println(item);
-//		System.out.println(inputDocument);
+        Integer totalDuration = 0;
+
+        String url = epcisURL.trim();
+        if(!url.endsWith("/"))
+        {
+            url = url + "/";
+        }
+        url = url + "Poll/SimpleEventQuery?MATCH_epc=" + item
+                + "&orderBy=eventTime&orderDirection=DESC&format=JSON";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", bearerToken);
+
+        HttpEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<Object>(headers),
+                String.class);
+        String result = response.getBody();
 
 		JSONObject jsonObject = new JSONObject(inputDocument);
+        JSONArray epcList = new JSONArray(response.getBody());
+
 		JSONArray jsonArray = jsonObject.getJSONArray("productionProcessTemplate");
+		Integer nextEventId = 0;
 		for (int i = 0; i < jsonArray.length(); i++) {
-			JSONObject exploreObject = jsonArray.getJSONObject(i);
-			System.out.println(exploreObject.getString("readPoint"));
+            if(i== 0 || nextEventId != 0) {
+                JSONObject exploreObject = jsonArray.getJSONObject(nextEventId);
+                for (int j = 0; j < epcList.length(); j++) {
+                    JSONObject epcDocument = epcList.getJSONObject(j);
+                    if(!epcDocument.has("used")) {
+                        if(exploreObject.getString("bizStep").equals(epcDocument.getString("bizStep")) &&
+                                exploreObject.getString("bizLocation").equals(epcDocument.getJSONObject("bizLocation").getString("id")) &&
+                                exploreObject.getString("readPoint").equals(epcDocument.getJSONObject("readPoint").getString("id"))) {
+                            epcDocument.put("used", "true");
+                            BigInteger eventTime = epcDocument.getJSONObject("eventTime").getBigInteger("$date");
+                            nextEventId = Integer.parseInt(exploreObject.getString("hasNext"));
+                            System.out.println("paisi");
+                        }
+                    }
+                }
+            }
 
-
+            JSONObject exploreObject = jsonArray.getJSONObject(i);
+            totalDuration += Integer.parseInt(exploreObject.getString("durationToNext"));
 		}
 
-		String url = epcisURL.trim();
-		if(!url.endsWith("/"))
-		{
-			url = url + "/";
-		}
-		url = url + "Poll/SimpleEventQuery?MATCH_epc=" + item
-				+ "&orderBy=eventTime&orderDirection=DESC&format=JSON";
-
-		System.out.println(url);
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", bearerToken);
-
-		HttpEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<Object>(headers),
-				String.class);
-		String result = response.getBody();
-
-		JSONArray list = new JSONArray(response.getBody());
-		for (int i = 0; i < list.length(); i++) {
-			JSONObject exploreObject = list.getJSONObject(i);
-			System.out.println(exploreObject);
-
-		}
-
+		System.out.println(totalDuration);
 //		System.out.println(list);
 
 		return new ResponseEntity<>("ok", HttpStatus.OK);
