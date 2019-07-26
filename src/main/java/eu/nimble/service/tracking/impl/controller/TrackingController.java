@@ -289,6 +289,7 @@ public class TrackingController {
 			  @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
         Integer totalDuration = 0;
+        Integer epcItemTotalDuration = 0;
 
         String url = epcisURL.trim();
         if(!url.endsWith("/"))
@@ -308,10 +309,12 @@ public class TrackingController {
 		JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray epcList = new JSONArray(response.getBody());
 
+        JSONObject epcListWithDelay = new JSONObject();
+
 		JSONArray jsonArray = jsonObject.getJSONArray("productionProcessTemplate");
 		Integer nextEventId = 0;
 		for (int i = 0; i < jsonArray.length(); i++) {
-            if(i== 0 || nextEventId != 0) {
+            if(i== 0 || nextEventId != null) {
                 JSONObject exploreObject = jsonArray.getJSONObject(nextEventId);
                 for (int j = 0; j < epcList.length(); j++) {
                     JSONObject epcDocument = epcList.getJSONObject(j);
@@ -320,9 +323,19 @@ public class TrackingController {
                                 exploreObject.getString("bizLocation").equals(epcDocument.getJSONObject("bizLocation").getString("id")) &&
                                 exploreObject.getString("readPoint").equals(epcDocument.getJSONObject("readPoint").getString("id"))) {
                             epcDocument.put("used", "true");
-                            BigInteger eventTime = epcDocument.getJSONObject("eventTime").getBigInteger("$date");
-                            nextEventId = Integer.parseInt(exploreObject.getString("hasNext"));
-                            System.out.println("paisi");
+                            Long eventTime = epcDocument.getJSONObject("eventTime").getLong("$date");
+                            if(exploreObject.getString("hasNext").isEmpty()) {
+                                nextEventId = null;
+                            } else {
+                                nextEventId = Integer.parseInt(exploreObject.getString("hasNext"));
+                            }
+                            if(nextEventId== null) {
+                                long currentUnixTime = System.currentTimeMillis();
+                                long milliseconds = currentUnixTime - eventTime;
+                                int seconds = (int) milliseconds / 1000;
+                                int hours = seconds / 3600;
+                                epcItemTotalDuration += hours;
+                            }
                         }
                     }
                 }
@@ -330,10 +343,32 @@ public class TrackingController {
 
             JSONObject exploreObject = jsonArray.getJSONObject(i);
             totalDuration += Integer.parseInt(exploreObject.getString("durationToNext"));
-		}
+            if(i != 0 || nextEventId == null) {
+                epcItemTotalDuration += Integer.parseInt(exploreObject.getString("durationToNext"));
+            }
 
+
+		}
+        Integer delay = epcItemTotalDuration - totalDuration ;
+
+		System.out.println(delay);
+		System.out.println(epcItemTotalDuration);
 		System.out.println(totalDuration);
-//		System.out.println(list);
+        /*long unixTime = System.currentTimeMillis();
+        long l = Long.parseLong("1564147956882");
+        long milliseconds = unixTime - l;
+        int seconds = (int) milliseconds / 1000;
+
+        // calculate hours minutes and seconds
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        seconds = (seconds % 3600) % 60;*/
+
+       /* System.out.println(unixTime);
+        System.out.println(" Hours: " + hours);
+        System.out.println(" Minutes: " + minutes);
+        System.out.println(" Seconds: " + seconds);*/
+
 
 		return new ResponseEntity<>("ok", HttpStatus.OK);
 	}
