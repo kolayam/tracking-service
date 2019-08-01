@@ -321,7 +321,8 @@ public class TrackingController {
 		// initialize nextEventId
 		Integer nextEventId = 0;
 		for (int i = 0; i < jsonTemplateArray.length(); i++) {
-            if(i== 0 || nextEventId != null) {
+			boolean epcItemTotalCalculated = true;
+			if(i== 0 || nextEventId != null) {
                 JSONObject templateObject = jsonTemplateArray.getJSONObject(nextEventId);
                 for (int j = 0; j < epcList.length(); j++) {
                     JSONObject epcDocument = epcList.getJSONObject(j);
@@ -333,40 +334,41 @@ public class TrackingController {
                             epcDocument.put("used", "true");
                             Long eventTime = epcDocument.getJSONObject("eventTime").getLong("$date");
 
-                            if(lastEPCItem.length() != 0) {
-                            	Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
-								epcItemTotalDuration += getDateTimeDifference(eventTime, lastEPCItemEventTime);
-							}
-
                             if(templateObject.getString("hasNext").isEmpty()) {
-                                nextEventId = null;
+
+								if(lastEPCItem.length() != 0 ) {
+									Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
+									epcItemTotalDuration += getDateTimeDifference(eventTime, lastEPCItemEventTime);
+								} else{
+									epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), eventTime);
+								}
+
+								nextEventId = null;
+								epcItemTotalCalculated = false;
                             } else {
+								if(lastEPCItem.length() != 0 ) {
+									Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
+									epcItemTotalDuration += getDateTimeDifference(eventTime, lastEPCItemEventTime);
+									epcItemTotalCalculated = false;
+								}
                                 nextEventId = Integer.parseInt(templateObject.getString("hasNext"));
                                 lastEPCItem = epcDocument;
                             }
-
-                            if(nextEventId== null) {
-                                epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), eventTime);
-                            }
-
-                        } else {
-							if(lastEPCItem.length() != 0) {
-								Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
-								epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), lastEPCItemEventTime);
-								nextEventId = null;
-							} else {
-								Long eventTime = epcDocument.getJSONObject("eventTime").getLong("$date");
-								epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), eventTime);
-								nextEventId = null;
-							}
-						}
+                        }
                     }
+
+					if(lastEPCItem.length() != 0 && epcList.length() == j +1) {
+						Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
+						epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), lastEPCItemEventTime);
+						nextEventId = null;
+						epcItemTotalCalculated = false;
+					}
                 }
             }
 
             JSONObject jsonTemplateObject = jsonTemplateArray.getJSONObject(i);
             totalDuration += Integer.parseInt(jsonTemplateObject.getString("durationToNext"));
-            if(i != 0 || nextEventId == null) {
+            if(epcItemTotalCalculated) {
                 epcItemTotalDuration += Integer.parseInt(jsonTemplateObject.getString("durationToNext"));
             }
 
@@ -377,8 +379,11 @@ public class TrackingController {
 		System.out.println(delay);
 		System.out.println(epcItemTotalDuration);
 		System.out.println(totalDuration);
+		JSONObject responseObject = new JSONObject();
+		responseObject.put("item",  item);
+		responseObject.put("delay", delay);
 
-		return new ResponseEntity<>("ok", HttpStatus.OK);
+		return new ResponseEntity<>(responseObject.toString(), HttpStatus.OK);
 	}
 
 	private int getDateTimeDifference(Long time1, Long time2) {
