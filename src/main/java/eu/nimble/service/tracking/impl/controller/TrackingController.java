@@ -288,9 +288,11 @@ public class TrackingController {
 			  @RequestBody String inputDocument,
 			  @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
+		// Initialize variable for total and epcItem duration
         Integer totalDuration = 0;
         Integer epcItemTotalDuration = 0;
 
+        // define url
         String url = epcisURL.trim();
         if(!url.endsWith("/"))
         {
@@ -299,6 +301,7 @@ public class TrackingController {
         url = url + "Poll/SimpleEventQuery?MATCH_epc=" + item
                 + "&orderBy=eventTime&orderDirection=DESC&format=JSON";
 
+        // get the event data list from the epcis application
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", bearerToken);
 
@@ -306,71 +309,85 @@ public class TrackingController {
                 String.class);
         String result = response.getBody();
 
+        // take epcis list and make it json array
 		JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray epcList = new JSONArray(response.getBody());
 
-        JSONObject epcListWithDelay = new JSONObject();
 
-		JSONArray jsonArray = jsonObject.getJSONArray("productionProcessTemplate");
+        JSONObject lastEPCItem = new JSONObject();
+
+        // take the json template
+		JSONArray jsonTemplateArray = jsonObject.getJSONArray("productionProcessTemplate");
+		// initialize nextEventId
 		Integer nextEventId = 0;
-		for (int i = 0; i < jsonArray.length(); i++) {
+		for (int i = 0; i < jsonTemplateArray.length(); i++) {
             if(i== 0 || nextEventId != null) {
-                JSONObject exploreObject = jsonArray.getJSONObject(nextEventId);
+                JSONObject templateObject = jsonTemplateArray.getJSONObject(nextEventId);
                 for (int j = 0; j < epcList.length(); j++) {
                     JSONObject epcDocument = epcList.getJSONObject(j);
                     if(!epcDocument.has("used")) {
-                        if(exploreObject.getString("bizStep").equals(epcDocument.getString("bizStep")) &&
-                                exploreObject.getString("bizLocation").equals(epcDocument.getJSONObject("bizLocation").getString("id")) &&
-                                exploreObject.getString("readPoint").equals(epcDocument.getJSONObject("readPoint").getString("id"))) {
+                        if(templateObject.getString("bizStep").equals(epcDocument.getString("bizStep")) &&
+                                templateObject.getString("bizLocation").equals(epcDocument.getJSONObject("bizLocation").getString("id")) &&
+                                templateObject.getString("readPoint").equals(epcDocument.getJSONObject("readPoint").getString("id"))) {
+
                             epcDocument.put("used", "true");
                             Long eventTime = epcDocument.getJSONObject("eventTime").getLong("$date");
-                            if(exploreObject.getString("hasNext").isEmpty()) {
+
+                            if(lastEPCItem.length() != 0) {
+                            	Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
+								epcItemTotalDuration += getDateTimeDifference(eventTime, lastEPCItemEventTime);
+							}
+
+                            if(templateObject.getString("hasNext").isEmpty()) {
                                 nextEventId = null;
                             } else {
-                                nextEventId = Integer.parseInt(exploreObject.getString("hasNext"));
+                                nextEventId = Integer.parseInt(templateObject.getString("hasNext"));
+                                lastEPCItem = epcDocument;
                             }
+
                             if(nextEventId== null) {
-                                long currentUnixTime = System.currentTimeMillis();
-                                long milliseconds = currentUnixTime - eventTime;
-                                int seconds = (int) milliseconds / 1000;
-                                int hours = seconds / 3600;
-                                epcItemTotalDuration += hours;
+                                epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), eventTime);
                             }
-                        }
+
+                        } else {
+							if(lastEPCItem.length() != 0) {
+								Long lastEPCItemEventTime = lastEPCItem.getJSONObject("eventTime").getLong("$date");
+								epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), lastEPCItemEventTime);
+								nextEventId = null;
+							} else {
+								Long eventTime = epcDocument.getJSONObject("eventTime").getLong("$date");
+								epcItemTotalDuration += getDateTimeDifference(System.currentTimeMillis(), eventTime);
+								nextEventId = null;
+							}
+						}
                     }
                 }
             }
 
-            JSONObject exploreObject = jsonArray.getJSONObject(i);
-            totalDuration += Integer.parseInt(exploreObject.getString("durationToNext"));
+            JSONObject jsonTemplateObject = jsonTemplateArray.getJSONObject(i);
+            totalDuration += Integer.parseInt(jsonTemplateObject.getString("durationToNext"));
             if(i != 0 || nextEventId == null) {
-                epcItemTotalDuration += Integer.parseInt(exploreObject.getString("durationToNext"));
+                epcItemTotalDuration += Integer.parseInt(jsonTemplateObject.getString("durationToNext"));
             }
 
 
 		}
-        Integer delay = epcItemTotalDuration - totalDuration ;
 
+        Integer delay = epcItemTotalDuration - totalDuration ;
 		System.out.println(delay);
 		System.out.println(epcItemTotalDuration);
 		System.out.println(totalDuration);
-        /*long unixTime = System.currentTimeMillis();
-        long l = Long.parseLong("1564147956882");
-        long milliseconds = unixTime - l;
-        int seconds = (int) milliseconds / 1000;
-
-        // calculate hours minutes and seconds
-        int hours = seconds / 3600;
-        int minutes = (seconds % 3600) / 60;
-        seconds = (seconds % 3600) % 60;*/
-
-       /* System.out.println(unixTime);
-        System.out.println(" Hours: " + hours);
-        System.out.println(" Minutes: " + minutes);
-        System.out.println(" Seconds: " + seconds);*/
-
 
 		return new ResponseEntity<>("ok", HttpStatus.OK);
+	}
+
+	private int getDateTimeDifference(Long time1, Long time2) {
+		long milliseconds = time1 - time2;
+		int seconds = (int) milliseconds / 1000;
+		int hours = seconds / 3600;
+		/*int minutes = (seconds % 3600) / 60;
+		seconds = (seconds % 3600) % 60;*/
+		return hours;
 	}
 	
 
