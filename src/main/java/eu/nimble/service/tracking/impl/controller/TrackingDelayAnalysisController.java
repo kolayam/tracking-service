@@ -17,6 +17,18 @@ public class TrackingDelayAnalysisController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @PostMapping("/getEPCListTimeDelay")
+    public ResponseEntity<?> getEPCListTimeDelay(@RequestBody String inputDocument,
+                         @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
+
+        String[] epcList = {"LB-3377-3-A1201", "LB-3377-3-A1201", "LB-3377-3-A1201"};
+        for(String item: epcList) {
+            System.out.println(item);
+        }
+
+        return new ResponseEntity<>("ok", HttpStatus.OK);
+    }
+
     @PostMapping("/getEPCTimeDelay")
     public ResponseEntity<?> getEPCTimeDelay(@RequestParam("item") String item, @RequestBody String inputDocument,
         @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
