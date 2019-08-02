@@ -103,7 +103,9 @@ public class TrackingDelayAnalysisController {
 
         Integer delay = epcItemTotalDuration - totalDuration ;
         JSONObject responseObject = new JSONObject();
-        responseObject.put(item, delay);
+        responseObject.put("unit", "H");
+        responseObject.put("delay", delay);
+        responseObject.put("epc", item);
         return responseObject;
     }
 
