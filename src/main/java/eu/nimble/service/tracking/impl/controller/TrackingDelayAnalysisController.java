@@ -1,5 +1,6 @@
 package eu.nimble.service.tracking.impl.controller;
 
+import io.swagger.annotations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+@Api(tags = {"Tracking Delay Analysis Controller"})
 @RestController
 public class TrackingDelayAnalysisController {
 
@@ -17,10 +19,16 @@ public class TrackingDelayAnalysisController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @ApiOperation(value = "Get delay for the given EPC list",
+            notes = "Get delay for the given EPC list", response = String.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
+            @ApiResponse(code = 400, message = "epc list is not valid?"),
+            @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEPCListTimeDelay")
-    public ResponseEntity<?> getEPCListTimeDelay(@RequestParam("epcList") String[] epcList,
-                         @RequestParam("inputDocument") String inputDocument,
-                         @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
+    public ResponseEntity<?> getEPCListTimeDelay(@ApiParam(value = "EPC List", required = true) @RequestParam("epcList") String[] epcList,
+             @ApiParam(value = "Production Process Template", required = true) @RequestParam("inputDocument") String inputDocument,
+             @ApiParam(value = "The Bearer token provided by the identity service", required = true)
+             @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
         JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray jsonTemplateArray = jsonObject.getJSONArray("productionProcessTemplate");
@@ -33,9 +41,16 @@ public class TrackingDelayAnalysisController {
         return new ResponseEntity<>(responseObject.toString(), HttpStatus.OK);
     }
 
+    @ApiOperation(value = "Get delay for the given EPC item",
+            notes = "Get delay for the given EPC item", response = String.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
+            @ApiResponse(code = 400, message = "epc item is not valid?"),
+            @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEPCTimeDelay")
-    public ResponseEntity<?> getEPCTimeDelay(@RequestParam("item") String item, @RequestBody String inputDocument,
-        @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
+    public ResponseEntity<?> getEPCTimeDelay(@ApiParam(value = "EPC Item", required = true) @RequestParam("item") String item,
+             @ApiParam(value = "Production Process Template", required = true) @RequestBody String inputDocument,
+             @ApiParam(value = "The Bearer token provided by the identity service", required = true)
+             @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
         JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray jsonTemplateArray = jsonObject.getJSONArray("productionProcessTemplate");

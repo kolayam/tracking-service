@@ -1,5 +1,6 @@
 package eu.nimble.service.tracking.impl.controller;
 
+import io.swagger.annotations.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+@Api(tags = {"Transformation Event Operation" })
 @RestController
 public class TransformationEventController {
     @Value("${spring.epcis.url}")
@@ -19,8 +21,14 @@ public class TransformationEventController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @ApiOperation(value = "Get transformation event for the given EPC",
+            notes = "Get transformation event by epc", response = String.class)
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
+            @ApiResponse(code = 400, message = "epc is not valid?"),
+            @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEpcTransformationOutput")
-    public ResponseEntity<?> getEpcTransformationOutput(@RequestParam("epc") String epc,
+    public ResponseEntity<?> getEpcTransformationOutput(@ApiParam(value = "EPC item value", required = true) @RequestParam("epc") String epc,
+            @ApiParam(value = "The Bearer token provided by the identity service", required = true)
             @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
         JSONArray transformationEventList = getJsonEPCList(bearerToken);
