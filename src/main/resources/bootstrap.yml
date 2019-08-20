@@ -26,6 +26,11 @@ logstash:
   
 nimble:
   platformHost: ${TRACKING_SERVICE_URL:http://localhost:8090}
+
+test:
+  base-url: ${EPCIS_TEST_BASE_URL:http://localhost:8080}
+  accessToken: ${EPCIS_TEST_TOKEN:token1}
+#Set up your base-url and accessToken here for testing.
 ---
 
 spring:

@@ -26,6 +26,7 @@
 		<default.package>eu.nimble.service.catalog.search</default.package>
 		<swagger.api.src>src/main/resources/api.yml</swagger.api.src>
 		<dockerImageTag>${project.version}</dockerImageTag>
+		<maven.test.skip>true</maven.test.skip>
 	</properties>
 
 	<parent>
