@@ -18,6 +18,15 @@ public class TransformationEventController {
     @Value("${spring.epcis.url}")
     private String epcisURL;
 
+    private String getBaseUrl() {
+        String url = epcisURL.trim();
+        if(!url.endsWith("/"))
+        {
+            url = url + "/";
+        }
+        return url + "/Service";
+    }
+
     @Autowired
     private RestTemplate restTemplate;
 
@@ -75,11 +84,7 @@ public class TransformationEventController {
 
     private JSONArray getJsonEPCList( String bearerToken) {
         // define url
-        String url = epcisURL.trim();
-        if(!url.endsWith("/"))
-        {
-            url = url + "/";
-        }
+        String url = this.getBaseUrl();
         String eventType = "TransformationEvent";
         url = url + "/Poll/SimpleEventQuery?format=JSON&eventType=" + eventType;
 

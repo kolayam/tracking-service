@@ -16,11 +16,91 @@ public class TrackingDelayAnalysisController {
     @Value("${spring.epcis.url}")
     private String epcisURL;
 
+    private String getBaseUrl() {
+        String url = epcisURL.trim();
+        if(!url.endsWith("/"))
+        {
+            url = url + "/";
+        }
+        return url + "/Service";
+    }
+
     @Autowired
     private RestTemplate restTemplate;
 
-    @ApiOperation(value = "Get delay for the given EPC list",
-            notes = "Get delay for the given EPC list", response = String.class)
+    @ApiOperation(value = "Get delay for the list EPC item", notes = "" +
+            "Here we calculate the delay for each epc item to arrive from source to destination and unit for delay is hour. \n" +
+            "For example, we assumes that one epc takes 1 hour to reach destination, but finally it takes 2 hours that means delay 1H." +
+            "\n" +
+            "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
+            "Example Item input: "+
+            "\n" +
+            "LB-3377-3-A1201, LB-3377-3-A1202, LB-3377-3-A1203" +
+            "\n" +
+            "Example inputDocument:" +
+            "\n" +
+            " {\n" +
+            "  \"productClass\": \"lindbacks_test\",\n" +
+            "  \"productionProcessTemplate\": [\n" +
+            "    {\n" +
+            "      \"id\": \"1\",\n" +
+            "      \"hasPrev\": \"\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.PodComp.1\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.PodComp.2\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:other\",\n" +
+            "      \"durationToNext\": \"1\",\n" +
+            "      \"hasNext\": \"\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"2\",\n" +
+            "      \"hasPrev\": \"1\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.lindbacks.2\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.lindbacks.3\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:installing\",\n" +
+            "      \"durationToNext\": \"1\",\n" +
+            "      \"hasNext\": \"3\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"3\",\n" +
+            "      \"hasPrev\": \"2\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.lindbacks.3\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.lindbacks.4\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:entering_exiting\",\n" +
+            "      \"durationToNext\": \"4\",\n" +
+            "      \"hasNext\": \"4\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"4\",\n" +
+            "      \"hasPrev\": \"3\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.lindbacks.4\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.lindbacks.5\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:shipping\",\n" +
+            "      \"durationToNext\": \"1\",\n" +
+            "      \"hasNext\": \"\"\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}\n" +
+            "Example output: " +
+            "\n" +
+            " [\n" +
+            "  {\n" +
+            "    \"unit\": \"H\",\n" +
+            "    \"delay\": 2,\n" +
+            "    \"epc\": \"LB-3377-3-A1201\"\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"unit\": \"H\",\n" +
+            "    \"delay\": 1,\n" +
+            "    \"epc\": \"LB-3377-3-A1202\"\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"unit\": \"H\",\n" +
+            "    \"delay\": 3,\n" +
+            "    \"epc\": \"LB-3377-3-A1203\"\n" +
+            "  }\n" +
+            " ]" +
+            "\n"
+            + " </textarea>", response = String.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
             @ApiResponse(code = 400, message = "epc list is not valid?"),
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
@@ -41,8 +121,68 @@ public class TrackingDelayAnalysisController {
         return new ResponseEntity<>(responseObject.toString(), HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get delay for the given EPC item",
-            notes = "Get delay for the given EPC item", response = String.class)
+    @ApiOperation(value = "Get delay for the given EPC item", notes = "" +
+            "Here we calculate the delay for each epc item to arrive from source to destination and unit for delay is hour. \n" +
+            "For example, we assumes that one epc takes 1 hour to reach destination, but finally it takes 2 hours that means delay 1H." +
+            "\n" +
+            "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
+            "Example Item input: "+
+            "\n" +
+            "LB-3377-3-A1201" +
+            "\n" +
+            "Example inputDocument:" +
+            "\n" +
+            " {\n" +
+            "  \"productClass\": \"lindbacks_test\",\n" +
+            "  \"productionProcessTemplate\": [\n" +
+            "    {\n" +
+            "      \"id\": \"1\",\n" +
+            "      \"hasPrev\": \"\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.PodComp.1\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.PodComp.2\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:other\",\n" +
+            "      \"durationToNext\": \"1\",\n" +
+            "      \"hasNext\": \"\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"2\",\n" +
+            "      \"hasPrev\": \"1\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.lindbacks.2\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.lindbacks.3\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:installing\",\n" +
+            "      \"durationToNext\": \"1\",\n" +
+            "      \"hasNext\": \"3\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"3\",\n" +
+            "      \"hasPrev\": \"2\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.lindbacks.3\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.lindbacks.4\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:entering_exiting\",\n" +
+            "      \"durationToNext\": \"4\",\n" +
+            "      \"hasNext\": \"4\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"4\",\n" +
+            "      \"hasPrev\": \"3\",\n" +
+            "      \"readPoint\": \"urn:epc:id:sgln:readPoint.lindbacks.4\",\n" +
+            "      \"bizLocation\": \"urn:epc:id:sgln:bizLocation.lindbacks.5\",\n" +
+            "      \"bizStep\": \"urn:epcglobal:cbv:bizstep:shipping\",\n" +
+            "      \"durationToNext\": \"1\",\n" +
+            "      \"hasNext\": \"\"\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}\n" +
+            "Example output: " +
+            "\n" +
+            " {\n" +
+            "  \"unit\": \"H\",\n" +
+            "  \"delay\": 3,\n" +
+            "  \"epc\": \"LB-3377-3-A1201\"\n" +
+            " }" +
+            "\n"
+            + " </textarea>", response = String.class)
+
     @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
             @ApiResponse(code = 400, message = "epc item is not valid?"),
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
@@ -135,13 +275,11 @@ public class TrackingDelayAnalysisController {
 
     private JSONArray getJsonEPCList(String item, String bearerToken) {
         // define url
-        String url = epcisURL.trim();
-        if(!url.endsWith("/"))
-        {
-            url = url + "/";
-        }
-        url = url + "Poll/SimpleEventQuery?MATCH_epc=" + item
+        String url = this.getBaseUrl();
+        url = url + "/Poll/SimpleEventQuery?MATCH_epc=" + item
                 + "&orderBy=eventTime&orderDirection=DESC&format=JSON";
+
+        System.out.println("Url" + url);
 
         // get the event data list from the epcis application
         HttpHeaders headers = new HttpHeaders();
