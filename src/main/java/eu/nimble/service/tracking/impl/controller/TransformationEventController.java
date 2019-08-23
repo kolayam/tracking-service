@@ -30,8 +30,36 @@ public class TransformationEventController {
     @Autowired
     private RestTemplate restTemplate;
 
-    @ApiOperation(value = "Get transformation event for the given EPC",
-            notes = "Get transformation event by epc", response = String.class)
+    @ApiOperation(value = "Get transformation event for the given EPC", notes = "" +
+            "Here we are looking for input epc and then get the output epc, this output epc again takes as input epc and then looking for output epc. \n" +
+            "Example, TEST-1 is the first epc and the output is TEST-2, again TEST-2 is the input epc and find TEST-3 is the output epc." +
+            "\n" +
+            "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
+            "Example output: " +
+            "\n" +
+            " {\n" +
+            "    \"traceTree\": [\n" +
+            "        {\n" +
+            "            \"Entity\": {\n" +
+            "                \"epc\": \"TEST-1\",\n" +
+            "                \"hasOutput\": \"TEST-2\"\n" +
+            "            }\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"Entity\": {\n" +
+            "                \"epc\": \"TEST-2\",\n" +
+            "                \"hasOutput\": \"TEST-3\"\n" +
+            "            }\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"Entity\": {\n" +
+            "                \"epc\": \"TEST-3\"\n" +
+            "            }\n" +
+            "        }\n" +
+            "    ]\n" +
+            " }" +
+            "\n"
+            + " </textarea>", response = String.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
             @ApiResponse(code = 400, message = "epc is not valid?"),
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
