@@ -28,6 +28,18 @@ public class TrackingDelayAnalysisControllerTest {
     @Value("${test.accessToken}")
     private String accessToken;
 
+    @Value("${spring.epcis.url}")
+    private String epcisURL;
+
+    private String getBaseUrl() {
+        String url = epcisURL.trim();
+        if(!url.endsWith("/"))
+        {
+            url = url + "/";
+        }
+        return url + "/Service";
+    }
+
     String inputDocument = "{\n" +
             "  \"productClass\": \"lindbacks_test\",\n" +
             "  \"productionProcessTemplate\": [\n" +
@@ -70,16 +82,118 @@ public class TrackingDelayAnalysisControllerTest {
             "  ]\n" +
             "}";
 
+    String testJsonEventData = "{\n" +
+            "  \"epcis\": {\n" +
+            "    \"EPCISBody\": {\n" +
+            "      \"EventList\": [\n" +
+            "        {\n" +
+            "          \"ObjectEvent\": {\n" +
+            "            \"eventTime\": 1564660166383,\n" +
+            "            \"eventTimeZoneOffset\": \"-06:00\",\n" +
+            "            \"epcList\": [\n" +
+            "              {\n" +
+            "                \"epc\": \"LB-3377-3-A1201\"\n" +
+            "              }\n" +
+            "            ],\n" +
+            "            \"action\": \"OBSERVE\",\n" +
+            "            \"bizStep\": \"urn:epcglobal:cbv:bizstep:other\",\n" +
+            "            \"readPoint\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:readPoint.PodComp.1\"\n" +
+            "            },\n" +
+            "            \"bizLocation\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:bizLocation.PodComp.2\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"ObjectEvent\": {\n" +
+            "            \"eventTime\": 1564660166394,\n" +
+            "            \"eventTimeZoneOffset\": \"-06:00\",\n" +
+            "            \"epcList\": [\n" +
+            "              {\n" +
+            "                \"epc\": \"LB-3377-3-A1201\"\n" +
+            "              }\n" +
+            "            ],\n" +
+            "            \"action\": \"OBSERVE\",\n" +
+            "            \"bizStep\": \"urn:epcglobal:cbv:bizstep:installing\",\n" +
+            "            \"readPoint\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:readPoint.PodComp.2\"\n" +
+            "            },\n" +
+            "            \"bizLocation\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:bizLocation.PodComp.3\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"ObjectEvent\": {\n" +
+            "            \"eventTime\": 1564660166406,\n" +
+            "            \"eventTimeZoneOffset\": \"-06:00\",\n" +
+            "            \"epcList\": [\n" +
+            "              {\n" +
+            "                \"epc\": \"LB-3377-3-A1201\"\n" +
+            "              }\n" +
+            "            ],\n" +
+            "            \"action\": \"OBSERVE\",\n" +
+            "            \"bizStep\": \"urn:epcglobal:cbv:bizstep:installing\",\n" +
+            "            \"readPoint\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:readPoint.PodComp.3\"\n" +
+            "            },\n" +
+            "            \"bizLocation\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:bizLocation.PodComp.4\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"ObjectEvent\": {\n" +
+            "            \"eventTime\": 1564660166421,\n" +
+            "            \"eventTimeZoneOffset\": \"-06:00\",\n" +
+            "            \"epcList\": [\n" +
+            "              {\n" +
+            "                \"epc\": \"LB-3377-3-A1201\"\n" +
+            "              }\n" +
+            "            ],\n" +
+            "            \"action\": \"OBSERVE\",\n" +
+            "            \"bizStep\": \"urn:epcglobal:cbv:bizstep:entering_exiting\",\n" +
+            "            \"readPoint\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:readPoint.PodComp.4\"\n" +
+            "            },\n" +
+            "            \"bizLocation\": {\n" +
+            "              \"id\": \"urn:epc:id:sgln:bizLocation.PodComp.5\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      ]\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+    @Test
+    public void getEPCTimeDelay() {
+        this.postRestAPITest(this.getBaseUrl() + "/JSONEventCapture", "application/json", testJsonEventData);
+        String epcItem = "LB-3377-3-A1201";
+        this.postRestAPIWithParameterTest(baseUrl + "/getEPCTimeDelay", epcItem, inputDocument, false);
+    }
+
     @Test
     public void getEPCListTimeDelay() {
         String epcList = "LB-3377-3-A1201, LB-3377-3-A1201, LB-3377-3-A1201";
         this.postRestAPIWithParameterTest(baseUrl + "/getEPCListTimeDelay", epcList, inputDocument, true);
     }
 
-    @Test
-    public void getEPCTimeDelay() {
-        String epcItem = "LB-3377-3-A1201";
-        this.postRestAPIWithParameterTest(baseUrl + "/getEPCTimeDelay", epcItem, inputDocument, false);
+    private void postRestAPITest(String url, String contentType, String entity) {
+        try {
+            HttpPost httpRequest = new HttpPost(url);
+            httpRequest.addHeader("Authorization", accessToken);
+            httpRequest.setHeader("Content-Type", contentType);
+            StringEntity xmlEntity = new StringEntity(entity);
+            httpRequest.setEntity(xmlEntity );
+            HttpResponse httpresponse = HttpClientBuilder.create().build().execute(httpRequest);
+            Assert.assertThat(
+                    httpresponse.getStatusLine().getStatusCode(),
+                    IsEqual.equalTo(HttpStatus.SC_OK));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void postRestAPIWithParameterTest(String url, String parameter, String entity, boolean list) {
