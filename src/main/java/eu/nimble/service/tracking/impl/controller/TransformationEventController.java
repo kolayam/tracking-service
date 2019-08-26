@@ -35,6 +35,10 @@ public class TransformationEventController {
             "Example, TEST-1 is the first epc and the output is TEST-2, again TEST-2 is the input epc and find TEST-3 is the output epc." +
             "\n" +
             "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
+            "Example epc input: "+
+            "\n" +
+            "TEST-1" +
+            "\n" +
             "Example output: " +
             "\n" +
             " {\n" +
