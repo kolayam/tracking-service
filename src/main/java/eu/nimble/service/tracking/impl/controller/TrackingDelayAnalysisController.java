@@ -188,9 +188,11 @@ public class TrackingDelayAnalysisController {
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEPCTimeDelay")
     public ResponseEntity<?> getEPCTimeDelay(@ApiParam(value = "EPC Item", required = true) @RequestParam("item") String item,
-             @ApiParam(value = "Production Process Template", required = true) @RequestBody String inputDocument,
+             @ApiParam(value = "Production Process Template", required = true) @RequestParam("inputDocument") String inputDocument,
              @ApiParam(value = "The Bearer token provided by the identity service", required = true)
              @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
+
+        System.out.println(inputDocument);
 
         JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray jsonTemplateArray = jsonObject.getJSONArray("productionProcessTemplate");
