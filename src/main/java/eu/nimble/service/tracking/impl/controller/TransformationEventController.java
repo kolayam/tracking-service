@@ -88,7 +88,16 @@ public class TransformationEventController {
                break;
             } else {
                 jsonArray.put(entityObject);
-                epc = entityObject.getJSONObject("Entity").getString("hasOutput");
+//                break;
+//                epc = entityObject.getJSONObject("Entity").getString("hasOutput");
+                JSONArray hasOutputArray = entityObject.getJSONObject("Entity").getJSONArray("hasOutput");
+                if(hasOutputArray.length() != 0) {
+                    for (int i=0; i<hasOutputArray.length(); i++ ) {
+                        JSONObject epcItem = new JSONObject();
+                        epc = hasOutputArray.getJSONObject(i).getString("epc");
+                    }
+                }
+
             }
         }
 
@@ -100,15 +109,24 @@ public class TransformationEventController {
 
         JSONObject obj = new JSONObject();
         for (int i = 0; i < transformationEventList.length(); i++) {
-            String inputEPC = transformationEventList.getJSONObject(i).getJSONArray("inputEPCList")
-                    .getJSONObject(0).getString("epc");
-            JSONObject entityObject = new JSONObject();
-            if(epc.equals(inputEPC)) {
-                String outputEPC = transformationEventList.getJSONObject(i).getJSONArray("outputEPCList")
-                        .getJSONObject(0).getString("epc");
-                entityObject.put("epc", epc);
-                entityObject.put("hasOutput", outputEPC);
-                obj.put("Entity", entityObject);
+            JSONArray inputEPCList = transformationEventList.getJSONObject(i).getJSONArray("inputEPCList");
+            String inputEPC ;
+            for (int j = 0; j < inputEPCList.length(); j++) {
+                inputEPC = inputEPCList.getJSONObject(j).getString("epc");
+
+                JSONObject entityObject = new JSONObject();
+                if (epc.equals(inputEPC)) {
+                    JSONArray outputEPCList = transformationEventList.getJSONObject(i).getJSONArray("outputEPCList");
+                    entityObject.put("epc", epc);
+                        JSONArray hasOutputArray = new JSONArray();
+                    for (int k = 0; k < outputEPCList.length(); k++) {
+                        JSONObject hasOutputObject = new JSONObject();
+                        hasOutputObject.put("epc", outputEPCList.getJSONObject(k).getString("epc"));
+                        hasOutputArray.put(hasOutputObject);
+                        entityObject.put("hasOutput", hasOutputArray);
+                    }
+                    obj.put("Entity", entityObject);
+                }
             }
         }
         return obj;
