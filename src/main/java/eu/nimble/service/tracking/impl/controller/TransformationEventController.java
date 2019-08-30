@@ -30,6 +30,8 @@ public class TransformationEventController {
     @Autowired
     private RestTemplate restTemplate;
 
+
+
     @ApiOperation(value = "Get transformation event for the given EPC", notes = "" +
             "Here we are looking for input epc and then get the output epc, this output epc again takes as input epc and then looking for output epc. \n" +
             "Example, TEST-1 is the first epc and the output is TEST-2, again TEST-2 is the input epc and find TEST-3 is the output epc." +
@@ -42,25 +44,49 @@ public class TransformationEventController {
             "Example output: " +
             "\n" +
             " {\n" +
-            "    \"traceTree\": [\n" +
-            "        {\n" +
-            "            \"Entity\": {\n" +
-            "                \"epc\": \"TEST-1\",\n" +
-            "                \"hasOutput\": \"TEST-2\"\n" +
-            "            }\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"Entity\": {\n" +
-            "                \"epc\": \"TEST-2\",\n" +
-            "                \"hasOutput\": \"TEST-3\"\n" +
-            "            }\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"Entity\": {\n" +
-            "                \"epc\": \"TEST-3\"\n" +
-            "            }\n" +
-            "        }\n" +
-            "    ]\n" +
+            "  \"traceTree\": [\n" +
+            "    {\n" +
+            "      \"Entity\": {\n" +
+            "        \"epc\": \"TEST-1\",\n" +
+            "        \"hasOutput\": [\n" +
+            "          {\n" +
+            "            \"epc\": \"TEST-2\"\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"epc\": \"TEST-5\"\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"epc\": \"TEST-6\"\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"Entity\": {\n" +
+            "        \"epc\": \"TEST-2\",\n" +
+            "        \"hasOutput\": [\n" +
+            "          {\n" +
+            "            \"epc\": \"TEST-3\"\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"Entity\": {\n" +
+            "        \"epc\": \"TEST-5\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"Entity\": {\n" +
+            "        \"epc\": \"TEST-6\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"Entity\": {\n" +
+            "        \"epc\": \"TEST-3\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
             " }" +
             "\n"
             + " </textarea>", response = String.class)
@@ -72,37 +98,42 @@ public class TransformationEventController {
             @ApiParam(value = "The Bearer token provided by the identity service", required = true)
             @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
+        JSONArray globalArray = new JSONArray();
         JSONArray transformationEventList = getJsonEPCList(bearerToken);
         JSONObject traceTreeObject = new JSONObject();
-
-        JSONObject entityObject = new JSONObject();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("epc", epc);
         JSONArray jsonArray = new JSONArray();
-        while(true) {
-            entityObject = getEntityObject(epc, transformationEventList);
+        jsonArray.put(jsonObject);
+        putEntityObjectGlobalArray(jsonArray, transformationEventList, globalArray);
+        traceTreeObject.put("traceTree", globalArray);
+        return new ResponseEntity<>( traceTreeObject.toString(), HttpStatus.OK);
+    }
+
+    private void putEntityObjectGlobalArray(JSONArray epcList, JSONArray transformationEventList, JSONArray globalArray) {
+
+        JSONArray jsonArray = new JSONArray();
+        for(int l = 0; l<epcList.length(); l++) {
+            String epc = epcList.getJSONObject(l).getString("epc");
+            JSONObject entityObject = getEntityObject(epc, transformationEventList);
             if(entityObject.length() == 0) {
                 JSONObject object = new JSONObject();
                 object.put("epc", epc);
                 JSONObject object1 = new JSONObject();
                 object1.put("Entity", object);
+                globalArray.put(object1);
                 jsonArray.put(object1);
-               break;
             } else {
+                globalArray.put(entityObject);
                 jsonArray.put(entityObject);
-//                break;
-//                epc = entityObject.getJSONObject("Entity").getString("hasOutput");
-                JSONArray hasOutputArray = entityObject.getJSONObject("Entity").getJSONArray("hasOutput");
-                if(hasOutputArray.length() != 0) {
-                    for (int i=0; i<hasOutputArray.length(); i++ ) {
-                        JSONObject epcItem = new JSONObject();
-                        epc = hasOutputArray.getJSONObject(i).getString("epc");
-                    }
-                }
-
             }
         }
 
-        traceTreeObject.put("traceTree", jsonArray);
-        return new ResponseEntity<>( traceTreeObject.toString(), HttpStatus.OK);
+        for (int i = 0; i<jsonArray.length(); i++) {
+            if(jsonArray.getJSONObject(i).getJSONObject("Entity").has("hasOutput")) {
+                putEntityObjectGlobalArray(jsonArray.getJSONObject(i).getJSONObject("Entity").getJSONArray("hasOutput"), transformationEventList, globalArray);
+            }
+        }
     }
 
     private JSONObject getEntityObject(String epc, JSONArray transformationEventList) {
@@ -131,6 +162,8 @@ public class TransformationEventController {
         }
         return obj;
     }
+
+
 
     private JSONArray getJsonEPCList( String bearerToken) {
         // define url
