@@ -24,13 +24,11 @@ public class TransformationEventController {
         {
             url = url + "/";
         }
-        return url + "/Service";
+        return url;
     }
 
     @Autowired
     private RestTemplate restTemplate;
-
-
 
     @ApiOperation(value = "Get transformation event for the given EPC", notes = "" +
             "Here we are looking for input epc and then get the output epc, this output epc again takes as input epc and then looking for output epc. \n" +
@@ -162,8 +160,6 @@ public class TransformationEventController {
         }
         return obj;
     }
-
-
 
     private JSONArray getJsonEPCList( String bearerToken) {
         // define url

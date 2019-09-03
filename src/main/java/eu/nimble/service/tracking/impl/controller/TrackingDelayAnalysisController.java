@@ -22,7 +22,7 @@ public class TrackingDelayAnalysisController {
         {
             url = url + "/";
         }
-        return url + "/Service";
+        return url;
     }
 
     @Autowired
@@ -192,8 +192,6 @@ public class TrackingDelayAnalysisController {
              @ApiParam(value = "The Bearer token provided by the identity service", required = true)
              @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
-        System.out.println(inputDocument);
-
         JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray jsonTemplateArray = jsonObject.getJSONArray("productionProcessTemplate");
         return new ResponseEntity<>(getEPCItemDelay(item, bearerToken, jsonTemplateArray).toString(), HttpStatus.OK);
@@ -280,8 +278,6 @@ public class TrackingDelayAnalysisController {
         String url = this.getBaseUrl();
         url = url + "/Poll/SimpleEventQuery?MATCH_epc=" + item
                 + "&orderBy=eventTime&orderDirection=DESC&format=JSON";
-
-        System.out.println("Url" + url);
 
         // get the event data list from the epcis application
         HttpHeaders headers = new HttpHeaders();
