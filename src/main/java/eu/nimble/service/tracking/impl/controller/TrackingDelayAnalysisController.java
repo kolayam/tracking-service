@@ -33,11 +33,11 @@ public class TrackingDelayAnalysisController {
             "For example, we assumes that one epc takes 1 hour to reach destination, but finally it takes 2 hours that means delay 1H." +
             "\n" +
             "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
-            "Example Item input: "+
+            "Example itemIDList input: "+
             "\n" +
             "LB-3377-3-A1201, LB-3377-3-A1202, LB-3377-3-A1203" +
             "\n" +
-            "Example inputDocument:" +
+            "Example processTemplateJSON input:" +
             "\n" +
             " {\n" +
             "  \"productClass\": \"lindbacks_test\",\n" +
@@ -99,14 +99,21 @@ public class TrackingDelayAnalysisController {
             "    \"epc\": \"LB-3377-3-A1203\"\n" +
             "  }\n" +
             " ]" +
+            "\n" +
+            "In case the given template cannot match the tracking event data, then the output for epc like: " +
+            "\n" +
+            " {\n" +
+            "  \"epc\": \"LB-3377-3-A1201\",\n" +
+            "  \"message\": \"The tracking history of the item doesn't comply with the production process template\"\n" +
+            " }" +
             "\n"
             + " </textarea>", response = String.class)
     @ApiResponses(value = { @ApiResponse(code = 200, message = "success"),
             @ApiResponse(code = 400, message = "epc list is not valid?"),
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEPCListTimeDelay")
-    public ResponseEntity<?> getEPCListTimeDelay(@ApiParam(value = "EPC List", required = true) @RequestParam("epcList") String[] epcList,
-             @ApiParam(value = "Production Process Template", required = true) @RequestParam("inputDocument") String inputDocument,
+    public ResponseEntity<?> getEPCListTimeDelay(@ApiParam(value = "Product EPC code List from which tracking information will retrieve", required = true) @RequestParam("itemIDList") String[] epcList,
+             @ApiParam(value = "Production Process Template JSON Document", required = true) @RequestParam("processTemplateJSON") String inputDocument,
              @ApiParam(value = "The Bearer token provided by the identity service", required = true)
              @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
@@ -126,11 +133,11 @@ public class TrackingDelayAnalysisController {
             "For example, we assumes that one epc takes 1 hour to reach destination, but finally it takes 2 hours that means delay 1H." +
             "\n" +
             "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
-            "Example Item input: "+
+            "Example itemID input: "+
             "\n" +
             "LB-3377-3-A1201" +
             "\n" +
-            "Example inputDocument:" +
+            "Example processTemplateJSON input:" +
             "\n" +
             " {\n" +
             "  \"productClass\": \"lindbacks_test\",\n" +
@@ -187,14 +194,19 @@ public class TrackingDelayAnalysisController {
             @ApiResponse(code = 400, message = "epc item is not valid?"),
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEPCTimeDelay")
-    public ResponseEntity<?> getEPCTimeDelay(@ApiParam(value = "EPC Item", required = true) @RequestParam("item") String item,
-             @ApiParam(value = "Production Process Template", required = true) @RequestParam("inputDocument") String inputDocument,
+    public ResponseEntity<?> getEPCTimeDelay(@ApiParam(value = "Product EPC code from which tracking information will retrieve", required = true)
+             @RequestParam("itemID") String item,
+             @ApiParam(value = "Production Process Template JSON Document", required = true) @RequestParam("processTemplateJSON") String inputDocument,
              @ApiParam(value = "The Bearer token provided by the identity service", required = true)
              @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
         JSONObject jsonObject = new JSONObject(inputDocument);
         JSONArray jsonTemplateArray = jsonObject.getJSONArray("productionProcessTemplate");
-        return new ResponseEntity<>(getEPCItemDelay(item, bearerToken, jsonTemplateArray).toString(), HttpStatus.OK);
+        JSONObject result = getEPCItemDelay(item, bearerToken, jsonTemplateArray);
+        if(result.has("message")) {
+            return new ResponseEntity<>(result.toString(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(result.toString(), HttpStatus.OK);
     }
 
     private JSONObject getEPCItemDelay(String item, String bearerToken, JSONArray jsonTemplateArray) {
@@ -204,6 +216,8 @@ public class TrackingDelayAnalysisController {
         Integer epcItemTotalDuration = 0;
         JSONObject lastEPCItem = new JSONObject();
         Integer nextEventId = 0;
+        JSONObject responseObject = new JSONObject();
+        boolean isMatch = false;
 
         for (int i = 0; i < jsonTemplateArray.length(); i++) {
             boolean epcItemTotalCalculated = true;
@@ -216,6 +230,7 @@ public class TrackingDelayAnalysisController {
                                 templateObject.getString("bizLocation").equals(epcDocument.getJSONObject("bizLocation").getString("id")) &&
                                 templateObject.getString("readPoint").equals(epcDocument.getJSONObject("readPoint").getString("id"))) {
 
+                            isMatch = true;
                             epcDocument.put("used", "true");
                             Long eventTime = epcDocument.getJSONObject("eventTime").getLong("$date");
 
@@ -256,11 +271,15 @@ public class TrackingDelayAnalysisController {
             }
         }
 
+        responseObject.put("epc", item);
+        if(!isMatch) {
+            responseObject.put("message", "The tracking history of the item doesn't comply with the production process template");
+            return responseObject;
+        }
+
         Integer delay = epcItemTotalDuration - totalDuration ;
-        JSONObject responseObject = new JSONObject();
         responseObject.put("unit", "H");
         responseObject.put("delay", delay);
-        responseObject.put("epc", item);
         return responseObject;
     }
 

@@ -31,11 +31,11 @@ public class TransformationEventController {
     private RestTemplate restTemplate;
 
     @ApiOperation(value = "Get transformation event for the given EPC", notes = "" +
-            "Here we are looking for input epc and then get the output epc, this output epc again takes as input epc and then looking for output epc. \n" +
-            "Example, TEST-1 is the first epc and the output is TEST-2, again TEST-2 is the input epc and find TEST-3 is the output epc." +
+            "Here we are looking for input item and then get the output item, this output item again takes as input item and then looking for output item. \n" +
+            "Example, TEST-1 is the first input item and the output is TEST-2, again TEST-2 is the input item and find TEST-3 is the output item." +
             "\n" +
             "<br><textarea disabled style=\"width:98%\" class=\"body-textarea\">" +
-            "Example epc input: "+
+            "Example itemID input: "+
             "\n" +
             "TEST-1" +
             "\n" +
@@ -92,7 +92,8 @@ public class TransformationEventController {
             @ApiResponse(code = 400, message = "epc is not valid?"),
             @ApiResponse(code = 401, message = "Unauthorized. Are the headers correct?"), })
     @PostMapping("/getEpcTransformationOutput")
-    public ResponseEntity<?> getEpcTransformationOutput(@ApiParam(value = "EPC item value", required = true) @RequestParam("epc") String epc,
+    public ResponseEntity<?> getEpcTransformationOutput(@ApiParam(value = "Product EPC code from which tracking information will retrieve", required = true)
+            @RequestParam("itemID") String epc,
             @ApiParam(value = "The Bearer token provided by the identity service", required = true)
             @RequestHeader(value = "Authorization", required = true)  String bearerToken) {
 
