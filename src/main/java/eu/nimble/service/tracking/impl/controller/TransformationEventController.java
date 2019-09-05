@@ -105,6 +105,11 @@ public class TransformationEventController {
         JSONArray jsonArray = new JSONArray();
         jsonArray.put(jsonObject);
         putEntityObjectGlobalArray(jsonArray, transformationEventList, globalArray);
+        if(globalArray.length() == 0) {
+            JSONObject object1 = new JSONObject();
+            object1.put("Entity", jsonObject);
+            globalArray.put(object1);
+        }
         traceTreeObject.put("traceTree", globalArray);
         return new ResponseEntity<>( traceTreeObject.toString(), HttpStatus.OK);
     }
@@ -115,16 +120,9 @@ public class TransformationEventController {
         for(int l = 0; l<epcList.length(); l++) {
             String epc = epcList.getJSONObject(l).getString("epc");
             JSONObject entityObject = getEntityObject(epc, transformationEventList);
-            if(entityObject.length() == 0) {
-                JSONObject object = new JSONObject();
-                object.put("epc", epc);
-                JSONObject object1 = new JSONObject();
-                object1.put("Entity", object);
-                globalArray.put(object1);
-                jsonArray.put(object1);
-            } else {
-                globalArray.put(entityObject);
-                jsonArray.put(entityObject);
+            if(entityObject.length() != 0) {
+              globalArray.put(entityObject);
+              jsonArray.put(entityObject);
             }
         }
 
