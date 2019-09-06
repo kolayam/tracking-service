@@ -30,7 +30,7 @@ public class TransformationEventController {
     @Autowired
     private RestTemplate restTemplate;
 
-    @ApiOperation(value = "Get transformation event for the given EPC", notes = "" +
+    @ApiOperation(value = "Get transformation event for the given EPC itemID", notes = "" +
             "Here we are looking for input item and then get the output item, this output item again takes as input item and then looking for output item. \n" +
             "Example, TEST-1 is the first input item and the output is TEST-2, again TEST-2 is the input item and find TEST-3 is the output item." +
             "\n" +
@@ -67,21 +67,6 @@ public class TransformationEventController {
             "            \"epc\": \"TEST-3\"\n" +
             "          }\n" +
             "        ]\n" +
-            "      }\n" +
-            "    },\n" +
-            "    {\n" +
-            "      \"Entity\": {\n" +
-            "        \"epc\": \"TEST-5\"\n" +
-            "      }\n" +
-            "    },\n" +
-            "    {\n" +
-            "      \"Entity\": {\n" +
-            "        \"epc\": \"TEST-6\"\n" +
-            "      }\n" +
-            "    },\n" +
-            "    {\n" +
-            "      \"Entity\": {\n" +
-            "        \"epc\": \"TEST-3\"\n" +
             "      }\n" +
             "    }\n" +
             "  ]\n" +
