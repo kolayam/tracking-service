@@ -182,14 +182,7 @@ public class BlockchainService {
 					String.class);
 			
 			 JSONObject jsonResponse = new JSONObject(response.getBody());
-			 boolean successFlag = jsonResponse.getBoolean("success");
-		     String successMsg = jsonResponse.getString("message");
-		     
-		     if(successFlag && successMsg.contains("\"result\":\"true\""))
-		     {
-		    	 found = true;
-		     }
-		        
+			 found = jsonResponse.getBoolean("result");
 		} catch (HttpStatusCodeException e) {
 			log.error("Received error during call blockchain services: " + e.getResponseBodyAsString());
 		}
