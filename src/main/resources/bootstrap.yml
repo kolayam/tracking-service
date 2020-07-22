@@ -17,9 +17,9 @@ spring:
       # it can be set via an environment variable or the config server
       enabled: ${discovery.enabled:${DISCOVERY_ENABLED:false}}
   epcis:
-    url: ${EPCIS_SERVICE_URL:http://localhost:8080}
+    url: ${EPCIS_SERVICE_URL:http://nimble-dev.ikap.biba.uni-bremen.de/epcis-server}
   blockchain-service:
-    url: ${BLOCKCHAIN_HASH_CHECK_URL:http://161.156.70.125:5000/hash}
+      url: ${BLOCKCHAIN_HASH_CHECK_URL:http://161.156.70.125:5000/hash}
     
 logstash:
   uri: ${LOGSTASH_URI:localhost:5000}
