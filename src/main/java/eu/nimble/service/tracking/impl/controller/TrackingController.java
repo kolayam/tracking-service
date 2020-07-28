@@ -1,10 +1,12 @@
 package eu.nimble.service.tracking.impl.controller;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import javax.json.JsonObject;
 
 /**
  * This controller should be implemented internally by company, who want to
@@ -277,7 +281,6 @@ public class TrackingController {
 		responseHeaders.add("Content-Type", "application/json; charset=utf-8");
 		return new ResponseEntity<>(result, responseHeaders, HttpStatus.OK);
 	}
-	
 
 	/**
 	 * Get master data for given vocabulary element by vocabulary ID. (using Path
